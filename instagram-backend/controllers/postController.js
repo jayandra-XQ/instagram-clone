@@ -1,5 +1,5 @@
 import Post from "../models/Post.js";
-import { getIO } from "../socket.js";
+import { getIO } from "../utils/socket.js";
 
 //create a new post
 export const createPost = async (req, res) => {

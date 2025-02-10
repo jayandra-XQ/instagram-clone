@@ -1,9 +1,9 @@
-import socketIO from 'socket.io'
+import { Server } from 'socket.io'
 
 let io;
 
 export const initializeSocket = (server) => {
-  io = socketIO(server, { cors: { origin: "*" } });
+  io = new Server(server, { cors: { origin: "*" } });
 
   io.on("connection", (socket) => {
     console.log("A user connected");
