@@ -1,4 +1,5 @@
 import Post from "../models/Post.js";
+import { getIO } from "../socket.js";
 
 //create a new post
 export const createPost = async (req, res) => {
@@ -12,6 +13,10 @@ export const createPost = async (req, res) => {
 
     const newPost = new Post({ description, imageUrl });
     await newPost.save();
+
+    // Emit a Socket.io event to all clients
+    const io = getIO();
+    io.emit("newPost", newPost); // Notify clients about the new post
 
     res.status(201).json(newPost);
 
@@ -44,6 +49,10 @@ export const likePost = async (req, res) => {
     post.likes += 1;
     await post.save();
 
+    // Emit a Socket.io event to all clients
+    const io = getIO();
+    io.emit("updatePost", post); // Notify clients about the updated post
+
     res.status(200).json(post);
   } catch (error) {
     console.log("Error liking Post:", error);
@@ -63,6 +72,10 @@ export const commentPost = async (req, res) => {
     // Store comment as an object
     post.comments.push({ username, text: comment, createdAt: new Date() });
     await post.save();
+
+    // Emit a Socket.io event to all clients
+    const io = getIO();
+    io.emit("updatePost", post); // Notify clients about the updated post
 
     res.status(200).json(post);
 
