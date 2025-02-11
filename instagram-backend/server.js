@@ -4,7 +4,7 @@ import cors from "cors";
 import http from "http";
 import connectDB from './config/db.js';
 import postRoutes from "./routes/postRoutes.js";
-import { initializeSocket, getIO } from './utils/socket.js';
+import { initializeSocket } from './utils/socket.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -22,7 +22,7 @@ app.use("/uploads", express.static("uploads"));
 app.use("/api/posts", postRoutes);
 
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5002;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   connectDB();

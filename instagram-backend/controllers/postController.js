@@ -66,11 +66,15 @@ export const commentPost = async (req, res) => {
   try {
     const { username, comment } = req.body;  // Get username from request
     const post = await Post.findById(req.params.id);
+    if (!username || !comment) {
+      return res.status(400).json({ error: "Username and comment text are required" });
+    }
+
 
     if (!post) return res.status(404).json({ error: "Post not found" });
 
     // Store comment as an object
-    post.comments.push({ username, text: comment, createdAt: new Date() });
+    post.comments.push({ username, text: comment });
     await post.save();
 
     // Emit a Socket.io event to all clients

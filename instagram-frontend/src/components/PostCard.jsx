@@ -1,18 +1,32 @@
 import socket from "@/utils/socket";
 import { Button, Card, CardContent, CardMedia, TextField, Typography } from "@mui/material";
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const PostCard = ({ post }) => {
   const [likes, setLikes] = useState(post.likes);
   const [comments, setComments] = useState(post.comments);
   const [comment, setComment] = useState("");
 
+  // Listen for socket events
+  useEffect(() => {
+    socket.on("updatePost", (updatedPost) => {
+      if (updatedPost._id === post._id) {
+        setComments(updatedPost.comments);
+        setLikes(updatedPost.likes);
+      }
+    });
+
+    return () => {
+      socket.off("updatePost");
+    };
+  }, [post._id]);
+
   //function for handle likes
   const handleLike = async () => {
     try {
       setLikes((prev) => prev + 1);
-      const response = await axios.post(`http://localhost:5001/api/posts/${post._id}/like`);
+      const response = await axios.post(`http://localhost:5002/api/posts/${post._id}/like`);
       socket.emit("likePost", response.data._id);
     } catch (error) {
       console.error("Failed to like post:", error);
@@ -24,16 +38,35 @@ const PostCard = ({ post }) => {
   //function for handle comments
   const handleComment = async () => {
     if (!comment.trim()) return;
-    try {
-      const newComment = { username: "Anonymous", text: comment, createdAt: new Date() }; // Fake user for now
-      setComments((prev) => [...prev, newComment]);
 
-      const response = await axios.post(`http://localhost:5001/api/posts/${post._id}/comment`, { comment });
-      socket.emit("commentPost", response.data._id, newComment);
+    try {
+      const commentData = {
+        username: "currentUser",
+        comment: comment
+      };
+
+      const newComment = {
+        username: "currentUser",
+        text: comment,
+        createdAt: new Date()
+      };
+      setComments(prev => [...prev, newComment]);
+
+      const response = await axios.post(
+        `http://localhost:5002/api/posts/${post._id}/comment`,
+        commentData
+      );
+
+      // Emit socket event
+      socket.emit("updatePost", {
+        postId: post._id,
+        comment: newComment
+      });
+
       setComment("");
     } catch (error) {
       console.error("Failed to add comment:", error);
-      setComments((prev) => prev.slice(0, -1)); // Revert if failed
+      setComments(prev => prev.slice(0, -1)); // Revert if failed
     }
   };
 
@@ -51,7 +84,7 @@ const PostCard = ({ post }) => {
           fullWidth
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          onKeyPress={(e) => {
+          onKeyDown={(e) => {
             if (e.key === "Enter") {
               handleComment();
             }
@@ -59,7 +92,7 @@ const PostCard = ({ post }) => {
         />
         <div>
           {comments.map((c, index) => (
-            <Typography key={index} variant="body2">
+            <Typography key={`${c.username}-${index}`} variant="body2" sx={{ my: 1 }}>
               <strong>{c.username}:</strong> {c.text}
             </Typography>
           ))}

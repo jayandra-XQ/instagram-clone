@@ -26,7 +26,7 @@ export default function UploadForm() {
     formData.append("description", description);
 
     try {
-      const response = await axios.post("http://localhost:5001/api/posts", formData, {
+      const response = await axios.post("http://localhost:5002/api/posts", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
